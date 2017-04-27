@@ -26,7 +26,6 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.audio.hooks.ConnectionListener;
 import net.dv8tion.jda.core.audio.hooks.ConnectionStatus;
-import net.dv8tion.jda.core.entities.EntityBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
@@ -38,7 +37,6 @@ import net.dv8tion.jda.core.managers.impl.PresenceImpl;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import net.dv8tion.jda.core.utils.SimpleLog;
 import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.http.HttpHost;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,7 +55,6 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
 
     protected final JDAImpl api;
     protected final JDA.ShardInfo shardInfo;
-    protected final HttpHost proxy;
     protected final Map<String, SocketHandler> handlers = new HashMap<>();
     protected final List<String> cfRays = new LinkedList<>();
 
@@ -92,7 +89,6 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
     {
         this.api = api;
         this.shardInfo = api.getShardInfo();
-        this.proxy = api.getGlobalProxy();
         this.shouldReconnect = api.isAutoReconnect();
         setupHandlers();
         setupSendingThread();
@@ -324,7 +320,7 @@ public class WebSocketClient extends WebSocketAdapter implements WebSocketListen
     {
         try
         {
-            RestAction<String> gateway = new RestAction<String>(api, Route.Misc.GATEWAY.compile(),null)
+            RestAction<String> gateway = new RestAction<String>(api, Route.Misc.GATEWAY.compile())
             {
                 @Override
                 protected void handleResponse(Response response, Request<String> request)

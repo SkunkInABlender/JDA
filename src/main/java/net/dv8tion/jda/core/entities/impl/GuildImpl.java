@@ -128,7 +128,7 @@ public class GuildImpl implements Guild
 
         Route.CompiledRoute route = Route.Guilds.GET_WEBHOOKS.compile(getId());
 
-        return new RestAction<List<Webhook>>(api, route, null)
+        return new RestAction<List<Webhook>>(api, route)
         {
             @Override
             protected void handleResponse(Response response, Request<List<Webhook>> request)
@@ -474,7 +474,7 @@ public class GuildImpl implements Guild
             throw new IllegalStateException("Cannot leave a guild that you are the owner of! Transfer guild ownership first!");
 
         Route.CompiledRoute route = Route.Self.LEAVE_GUILD.compile(getId());
-        return new RestAction<Void>(api, route, null)
+        return new RestAction<Void>(api, route)
         {
             @Override
             protected void handleResponse(Response response, Request<Void> request)
@@ -759,7 +759,7 @@ public class GuildImpl implements Guild
 
         final Route.CompiledRoute route = Route.Invites.GET_GUILD_INVITES.compile(getId());
 
-        return new RestAction<List<Invite>>(api, route, null)
+        return new RestAction<List<Invite>>(api, route)
         {
             @Override
             protected void handleResponse(final Response response, final Request<List<Invite>> request)

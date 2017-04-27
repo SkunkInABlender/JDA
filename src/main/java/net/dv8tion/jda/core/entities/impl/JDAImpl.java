@@ -16,7 +16,6 @@
 
 package net.dv8tion.jda.core.entities.impl;
 
-import com.mashape.unirest.http.Unirest;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import gnu.trove.map.TLongObjectMap;
 import net.dv8tion.jda.bot.JDABot;
@@ -41,12 +40,11 @@ import net.dv8tion.jda.core.managers.impl.PresenceImpl;
 import net.dv8tion.jda.core.requests.*;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import net.dv8tion.jda.core.utils.SimpleLog;
-import org.apache.http.HttpHost;
+import okhttp3.OkHttpClient;
 import org.apache.http.util.Args;
 import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -71,7 +69,7 @@ public class JDAImpl implements JDA
 
     protected final TLongObjectMap<AudioManager> audioManagers = MiscUtil.newLongMap();
 
-    protected final HttpHost proxy;
+    protected final OkHttpClient.Builder httpClientBuilder;
     protected final WebSocketFactory wsFactory;
     protected final AccountType accountType;
     protected final PresenceImpl presence;
@@ -99,14 +97,13 @@ public class JDAImpl implements JDA
     protected long responseTotal;
     protected long ping = -1;
 
-    public JDAImpl(AccountType accountType, HttpHost proxy, WebSocketFactory wsFactory,
-                   boolean autoReconnect, boolean audioEnabled, boolean useShutdownHook, boolean bulkDeleteSplittingEnabled,
-                   int corePoolSize, int maxReconnectDelay)
+    public JDAImpl(AccountType accountType, OkHttpClient.Builder httpClientBuilder, WebSocketFactory wsFactory, boolean autoReconnect, boolean audioEnabled,
+            boolean useShutdownHook, boolean bulkDeleteSplittingEnabled, int corePoolSize, int maxReconnectDelay)
     {
         this.presence = new PresenceImpl(this);
         this.accountType = accountType;
         this.requester = new Requester(this);
-        this.proxy = proxy;
+        this.httpClientBuilder = httpClientBuilder;
         this.wsFactory = wsFactory;
         this.autoReconnect = autoReconnect;
         this.audioEnabled = audioEnabled;
@@ -159,7 +156,7 @@ public class JDAImpl implements JDA
 
     public void verifyToken() throws LoginException, RateLimitedException
     {
-        RestAction<JSONObject> login = new RestAction<JSONObject>(this, Route.Self.GET_SELF.compile(), null)
+        RestAction<JSONObject> login = new RestAction<JSONObject>(this, Route.Self.GET_SELF.compile())
         {
             @Override
             protected void handleResponse(Response response, Request<JSONObject> request)
@@ -258,12 +255,6 @@ public class JDAImpl implements JDA
     public String getToken()
     {
         return token;
-    }
-
-    @Override
-    public HttpHost getGlobalProxy()
-    {
-        return proxy;
     }
 
     @Override
@@ -378,7 +369,7 @@ public class JDAImpl implements JDA
             return new RestAction.EmptyRestAction<>(user);
 
         Route.CompiledRoute route = Route.Users.GET_USER.compile(Long.toUnsignedString(id));
-        return new RestAction<User>(this, route, null)
+        return new RestAction<User>(this, route)
         {
             @Override
             protected void handleResponse(Response response, Request<User> request)
@@ -598,15 +589,6 @@ public class JDAImpl implements JDA
                 e.printStackTrace();
             }
         }
-
-        if (free)
-        {
-            try
-            {
-                Unirest.shutdown();
-            }
-            catch (IOException ignored) {}
-        }
         setStatus(Status.SHUTDOWN);
     }
 
@@ -823,5 +805,10 @@ public class JDAImpl implements JDA
     public EventCache getEventCache()
     {
         return eventCache;
+    }
+
+    public OkHttpClient.Builder getHttpClientBuilder()
+    {
+        return httpClientBuilder;
     }
 }
